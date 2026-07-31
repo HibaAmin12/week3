@@ -1,118 +1,118 @@
-# import os
-# from dotenv import load_dotenv
-# from fastapi import FastAPI, Header, HTTPException, Depends
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, Header, HTTPException, Depends
 
-# app = FastAPI()
-# load_dotenv()
+app = FastAPI()
+load_dotenv()
 
-# API_KEY = os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")
 
-# def verify_api_key(x_api_key: str = Header()):
-#     if x_api_key != API_KEY:
-#         raise HTTPException(status_code=401, detail="Invalid API Key")
+def verify_api_key(x_api_key: str = Header()):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
 
-# @app.get("/")
-# def home():
-#     return {"message": "Public Endpoint"}
+@app.get("/")
+def home():
+    return {"message": "Public Endpoint"}
 
-# @app.post("/tasks", dependencies=[Depends(verify_api_key)])
-# def create_task():
-#     return {"message": "Task Created"}
+@app.post("/tasks", dependencies=[Depends(verify_api_key)])
+def create_task():
+    return {"message": "Task Created"}
 
-# from fastapi import FastAPI, Header, HTTPException, Depends
-# from database import get_connection
+from fastapi import FastAPI, Header, HTTPException, Depends
+from database import get_connection
 
-# app = FastAPI()
-
-
-# @app.get("/tasks")
-# def get_tasks():
-
-#     connection = get_connection()
-#     cursor = connection.cursor()
-
-#     cursor.execute("SELECT * FROM tasks")
-
-#     rows = cursor.fetchall()
-
-#     connection.close()
-
-#     return rows
+app = FastAPI()
 
 
-# @app.post("/tasks")
-# def create_task(title: str):
+@app.get("/tasks")
+def get_tasks():
 
-#     connection = get_connection()
-#     cursor = connection.cursor()
+    connection = get_connection()
+    cursor = connection.cursor()
 
-#     cursor.execute(
-#         """
-#         INSERT INTO tasks(title, done, created_at)
-#         VALUES (?, ?, ?)
-#         """,
-#         (title, False, "2026-07-31")
-#     )
+    cursor.execute("SELECT * FROM tasks")
 
-#     connection.commit()
+    rows = cursor.fetchall()
 
-#     connection.close()
+    connection.close()
 
-#     return {
-#         "message": "Task Created"
-#     }
+    return rows
 
-# @app.put("/tasks/{task_id}")
-# def update_task(task_id: int):
 
-#     connection = get_connection()
-#     cursor = connection.cursor()
+@app.post("/tasks")
+def create_task(title: str):
 
-#     cursor.execute(
-#         """
-#         UPDATE tasks
-#         SET done = ?
-#         WHERE id = ?
-#         """,
-#         (True, task_id)
-#     )
+    connection = get_connection()
+    cursor = connection.cursor()
 
-#     connection.commit()
+    cursor.execute(
+        """
+        INSERT INTO tasks(title, done, created_at)
+        VALUES (?, ?, ?)
+        """,
+        (title, False, "2026-07-31")
+    )
 
-#     connection.close()
+    connection.commit()
 
-#     return {
-#         "message": "Task Updated"
-#     }
+    connection.close()
 
-# @app.delete("/tasks/{task_id}")
-# def delete_task(task_id: int):
+    return {
+        "message": "Task Created"
+    }
 
-#     connection = get_connection()
-#     cursor = connection.cursor()
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int):
 
-#     cursor.execute(
-#         """
-#         DELETE FROM tasks
-#         WHERE id = ?
-#         """,
-#         (task_id,)
-#     )
+    connection = get_connection()
+    cursor = connection.cursor()
 
-#     connection.commit()
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET done = ?
+        WHERE id = ?
+        """,
+        (True, task_id)
+    )
 
-#     if cursor.rowcount == 0:
-#         connection.close()
-#         raise HTTPException(
-#             status_code=404,
-#             detail="Task not found"
-#         )
+    connection.commit()
 
-#     connection.close()
+    connection.close()
 
-#     return {
-#         "message": "Task Deleted"
-#     }
+    return {
+        "message": "Task Updated"
+    }
+
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: int):
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM tasks
+        WHERE id = ?
+        """,
+        (task_id,)
+    )
+
+    connection.commit()
+
+    if cursor.rowcount == 0:
+        connection.close()
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    connection.close()
+
+    return {
+        "message": "Task Deleted"
+    }
 
 
 from fastapi import FastAPI, Depends, Header, HTTPException
