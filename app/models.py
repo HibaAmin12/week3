@@ -1,7 +1,5 @@
 """
-Database models for the Notes API.
-
-This module defines the database schema using SQLAlchemy ORM.
+Database models for Notes API.
 """
 
 from datetime import datetime
@@ -17,30 +15,40 @@ from app.database import Base
 # ==========================================================
 
 class User(Base):
-    """
-    Represents a registered user of the application.
-    """
 
     __tablename__ = "users"
 
-    # Primary key.
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    # Username must be unique.
-    username = Column(String, unique=True, nullable=False)
+    username = Column(
+        String,
+        unique=True,
+        nullable=False
+    )
 
-    # Store the hashed password instead of the plain password.
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(
+        String,
+        nullable=False
+    )
 
-    # User role (user/admin).
-    role = Column(String, default="user", nullable=False)
+    role = Column(
+        String,
+        default="user",
+        nullable=False
+    )
 
-    # One user can own multiple notes.
+
+    # One user can have many notes
     notes = relationship(
         "Note",
         back_populates="owner",
-        cascade="all, delete-orphan",
+        cascade="all, delete-orphan"
     )
+
 
 
 # ==========================================================
@@ -48,23 +56,31 @@ class User(Base):
 # ==========================================================
 
 class Category(Base):
-    """
-    Represents a note category.
-    """
 
     __tablename__ = "categories"
 
-    # Primary key.
-    id = Column(Integer, primary_key=True, index=True)
 
-    # Category name must be unique.
-    name = Column(String, unique=True, nullable=False)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    # One category can contain many notes.
+
+    # Category name
+    name = Column(
+        String,
+        unique=True,
+        nullable=False
+    )
+
+
+    # One category can have many notes
     notes = relationship(
         "Note",
-        back_populates="category",
+        back_populates="category"
     )
+
 
 
 # ==========================================================
@@ -72,55 +88,67 @@ class Category(Base):
 # ==========================================================
 
 class Note(Base):
-    """
-    Represents a note created by a user.
-    """
 
     __tablename__ = "notes"
 
-    # Primary key.
-    id = Column(Integer, primary_key=True, index=True)
 
-    # Note title.
-    title = Column(String, nullable=False)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    # Note content.
-    body = Column(String, nullable=False)
 
-    # Foreign key referencing the owner of the note.
+    title = Column(
+        String,
+        nullable=False
+    )
+
+
+    body = Column(
+        String,
+        nullable=False
+    )
+
+
+    # Note belongs to user
     owner_id = Column(
         Integer,
         ForeignKey("users.id"),
-        nullable=False,
+        nullable=False
     )
 
-    # Optional category assigned to the note.
+
+    # Note optionally belongs to category
     category_id = Column(
         Integer,
         ForeignKey("categories.id"),
-        nullable=True,
+        nullable=True
     )
 
-    # Timestamp when the note is created.
+
     created_at = Column(
         DateTime,
         default=datetime.utcnow,
-        nullable=False,
+        nullable=False
     )
-    # Last updated timestamp.
-    updated_at = Column(
-    DateTime,
-    nullable=True,
-)
 
-    # Relationship to the owner.
+
+    updated_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+
+    # Relationship with User
     owner = relationship(
         "User",
-        back_populates="notes",
+        back_populates="notes"
     )
 
-    # Relationship to the category.
+
+    # Relationship with Category
     category = relationship(
         "Category",
-        back_populates="notes",
+        back_populates="notes"
     )

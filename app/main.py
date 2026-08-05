@@ -10,7 +10,11 @@ from fastapi import FastAPI
 
 from app.routers import admin, auth, notes
 
-# Create the FastAPI application.
+
+# ==========================================================
+# Create FastAPI Application
+# ==========================================================
+
 app = FastAPI(
     title="Notes API",
     description=(
@@ -20,16 +24,30 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Register application routers.
+
+# ==========================================================
+# Register Routers
+# ==========================================================
+
 app.include_router(auth.router)
+
 app.include_router(notes.router)
+
 app.include_router(admin.router)
 
 
-@app.get("/", tags=["Root"])
+
+# ==========================================================
+# Root Endpoint
+# ==========================================================
+
+@app.get(
+    "/",
+    tags=["Root"]
+)
 def root():
     """
-    Root endpoint used to verify that the API is running.
+    Health check endpoint.
     """
 
     return {

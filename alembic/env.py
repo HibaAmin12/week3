@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -13,9 +15,27 @@ from app import models
 # access to the values within the .ini file in use.
 config = context.config
 
+
+# Load environment variables from the .env file.
+# This allows Alembic to use the same database
+# configuration as the FastAPI application.
+load_dotenv()
+
+
+# Override the database URL defined in alembic.ini
+# with the DATABASE_URL value from the .env file.
+config.set_main_option(
+    "sqlalchemy.url",
+    os.getenv("DATABASE_URL")
+)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+
+# Configure Python logging from alembic.ini.
+# The check avoids errors if no logging configuration exists.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
