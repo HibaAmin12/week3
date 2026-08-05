@@ -2,8 +2,9 @@ fastapi==0.141.1
 uvicorn==0.52.1
 SQLAlchemy==2.0.51
 alembic==1.19.0
-python-dotenv==1.2.2
+psycopg2-binary==2.9.12
 python-jose==3.5.0
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 python-multipart==0.0.32
-psycopg2-binary==2.9.12
+python-dotenv==1.2.2

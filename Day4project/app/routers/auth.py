@@ -15,10 +15,12 @@ from app.dependencies import get_db
 from app.oauth2 import create_access_token
 from app.utils import hash_password, verify_password
 
+
 router = APIRouter(
     prefix="/api/v1/auth",
     tags=["Authentication"],
 )
+
 
 
 # ==========================================================
@@ -38,12 +40,15 @@ def register_user(
     Register a new user.
     """
 
-    # Check whether the username already exists.
+
     existing_user = (
         db.query(models.User)
-        .filter(models.User.username == user.username)
+        .filter(
+            models.User.username == user.username
+        )
         .first()
     )
+
 
     if existing_user:
         raise HTTPException(
@@ -51,22 +56,26 @@ def register_user(
             detail="Username already exists.",
         )
 
-    # Hash the password before storing it.
-    hashed_password = hash_password(user.password)
 
-    # Create a new user object.
+    hashed_password = hash_password(
+        user.password
+    )
+
+
     new_user = models.User(
         username=user.username,
         hashed_password=hashed_password,
         role=user.role,
     )
 
-    # Save the user to the database.
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
+
     return new_user
+
 
 
 # ==========================================================
@@ -83,24 +92,26 @@ def login(
     db: Session = Depends(get_db),
 ):
     """
-    Authenticate a user and return a JWT access token.
+    Authenticate a user and return JWT access token.
     """
 
-    # Find the user by username.
+
     user = (
         db.query(models.User)
-        .filter(models.User.username == user_credentials.username)
+        .filter(
+            models.User.username == user_credentials.username
+        )
         .first()
     )
 
-    # Return an error if the user does not exist.
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password.",
         )
 
-    # Verify the entered password.
+
     if not verify_password(
         user_credentials.password,
         user.hashed_password,
@@ -110,15 +121,17 @@ def login(
             detail="Invalid username or password.",
         )
 
-    # Create a JWT access token.
+
+    # Create JWT token
+    # sub contains user id (standard JWT claim)
     access_token = create_access_token(
         data={
-            "username": user.username,
+            "sub": str(user.id),
             "role": user.role,
         },
     )
 
-    # Return the token to the client.
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
