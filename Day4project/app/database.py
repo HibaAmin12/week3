@@ -11,8 +11,8 @@ This module is responsible for:
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# SQLite database file.
-DATABASE_URL = "sqlite:///./notes.db"
+# PostgreSQL database file.
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create the SQLAlchemy engine.
 # The engine is responsible for connecting the application
