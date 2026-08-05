@@ -21,16 +21,28 @@ from app import models
 from app.dependencies import get_db
 from app.schemas import TokenData
 
-# Load environment variables.
+
+# Load environment variables
 load_dotenv()
+
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+)
 
-# FastAPI expects the JWT token from this login endpoint.
-oauth2_scheme = OAuth2PasswordBearer( tokenUrl="/api/v1/auth/login",)
 
+# FastAPI gets JWT token from login endpoint
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login"
+)
+
+
+
+# ==========================================================
+# Create JWT Token
+# ==========================================================
 
 def create_access_token(data: dict):
     """
@@ -40,10 +52,15 @@ def create_access_token(data: dict):
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES,
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
-    to_encode.update({"exp": expire})
+    to_encode.update(
+        {
+            "exp": expire
+        }
+    )
+
 
     return jwt.encode(
         to_encode,
@@ -52,62 +69,86 @@ def create_access_token(data: dict):
     )
 
 
+
+# ==========================================================
+# Verify JWT Token
+# ==========================================================
+
 def verify_access_token(
     token: str,
     credentials_exception,
 ):
     """
-    Verify the JWT access token.
+    Verify JWT token and extract user information.
     """
 
     try:
+
         payload = jwt.decode(
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM],
         )
 
-        username: Optional[str] = payload.get("username")
+
+        user_id: Optional[str] = payload.get("sub")
         role: Optional[str] = payload.get("role")
 
-        if username is None:
+
+        if user_id is None:
             raise credentials_exception
 
+
         return TokenData(
-            username=username,
+            user_id=int(user_id),
             role=role,
         )
+
 
     except JWTError:
         raise credentials_exception
 
+
+
+# ==========================================================
+# Get Current User
+# ==========================================================
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
     """
-    Return the currently authenticated user.
+    Return currently authenticated user.
     """
+
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials.",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={
+            "WWW-Authenticate": "Bearer"
+        },
     )
+
 
     token_data = verify_access_token(
         token,
         credentials_exception,
     )
 
+
     user = (
         db.query(models.User)
-        .filter(models.User.username == token_data.username)
+        .filter(
+            models.User.id == token_data.user_id
+        )
         .first()
     )
 
+
     if user is None:
         raise credentials_exception
+
 
     return user
