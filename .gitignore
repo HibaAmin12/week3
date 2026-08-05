@@ -1,22 +1,4 @@
-# Python cache
-__pycache__/
-*.py[cod]
-
-# Virtual environment
 venv/
-.venv/
-
-# Environment variables
+__pycache__/
+*.pyc
 .env
-
-# SQLite database
-*.db
-
-# VS Code
-.vscode/
-
-# PyCharm
-.idea/
-
-# OS files
-.DS_Store

@@ -8,7 +8,6 @@ This module is responsible for:
 4. Providing the Base class for all ORM models.
 """
 
-# Load environment variables.
 import os
 
 from dotenv import load_dotenv
@@ -18,16 +17,13 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Load variables from the .env file.
 load_dotenv()
 
-# SQLite database connection string.
-DATABASE_URL = "sqlite:///./notes.db"
+# PostgreSQL database connection string.
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create the SQLAlchemy engine.
-# The engine manages connections between the application
-# and the PostgreSQL database.
 engine = create_engine(DATABASE_URL)
 
 # Create a database session factory.
-# Every request receives its own database session.
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -35,5 +31,4 @@ SessionLocal = sessionmaker(
 )
 
 # Base class for all SQLAlchemy models.
-# Every ORM model (User, Note, Category) inherits from this class.
 Base = declarative_base()
