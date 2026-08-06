@@ -1,6 +1,6 @@
-# Notes API 
+# Notes API
 
-A small CRUD REST API for managing user-owned notes with JWT authentication, role-based authorization, ownership-based access control, SQLAlchemy ORM, PostgreSQL database, and Alembic migrations.
+A small CRUD REST API for managing user-owned notes with JWT authentication, role-based authorization, ownership-based access control, SQLAlchemy ORM, PostgreSQL database, Alembic migrations, and Dockerized deployment.
 
 ## Features
 
@@ -8,16 +8,17 @@ A small CRUD REST API for managing user-owned notes with JWT authentication, rol
 * Password hashing
 * User registration/login
 * Role-based authorization (user/admin)
-* Ownership-based note access
+* Ownership-based note access control
 * CRUD operations for notes
 * Category relationship (One-to-Many)
 * PostgreSQL database integration
 * Alembic database migrations
 * API versioning using `/api/v1`
+* Docker and Docker Compose setup
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```
 Day4project/
@@ -26,31 +27,31 @@ Day4project/
 │   ├── main.py                 # FastAPI application entry point
 │   ├── database.py             # PostgreSQL connection + SQLAlchemy setup
 │   ├── dependencies.py         # Database dependency functions
-│   ├── models.py               # SQLAlchemy ORM models (User, Note, Category)
+│   ├── models.py               # SQLAlchemy ORM models
 │   ├── schemas.py              # Pydantic request/response schemas
 │   ├── oauth2.py               # JWT token creation and verification
 │   ├── utils.py                # Password hashing utilities
 │   │
 │   └── routers/
-│       ├── auth.py             # User login/authentication routes
+│       ├── auth.py             # Register/login routes
 │       ├── notes.py            # Notes CRUD routes
-│       ├── categories.py       # Category routes
-│       └── admin.py            # Admin-only routes
+│       ├── categories.py        # Category routes
+│       └── admin.py             # Admin-only routes
 │
 ├── alembic/
-│   ├── env.py
-│   ├── script.py.mako
 │   └── versions/               # Database migration files
 │
+├── Dockerfile                  # API container configuration
+├── docker-compose.yml          # FastAPI + PostgreSQL services
 ├── alembic.ini                 # Alembic configuration
 ├── requirements.txt            # Python dependencies
-├── README.md                   # Project documentation
-└── .env.example                # Environment variables template
+├── README.md
+└── .env.example
 ```
 
 ---
 
-# Setup Instructions
+# Local Setup (Without Docker)
 
 ## 1. Create Virtual Environment
 
@@ -79,29 +80,78 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-I Don't upload  my`.env` file to GitHub.
+The `.env` file contains secrets and is not uploaded to GitHub.
 
-Instead i upload this one  `.env.example` 
+Instead, `.env.example` is provided as a template.
 
 ---
 
-# Database Setup
+# Docker Setup (Recommended)
 
-This project uses PostgreSQL.
+The project uses Docker Compose to run:
 
-Create database:
+```
+FastAPI Container
+        |
+        |
+        ↓
+PostgreSQL Container
+```
+
+## Start Containers
+
+Build and start the application:
 
 ```bash
-sudo -u postgres psql
+sudo docker-compose up -d --build
 ```
 
-Inside PostgreSQL:
+Check running containers:
 
-```sql
-CREATE DATABASE notesdb;
+```bash
+sudo docker ps
 ```
 
-Run migrations:
+Expected:
+
+```
+day4project_api_1
+day4project_db_1
+```
+
+---
+
+## Database Configuration in Docker
+
+Inside Docker, the database host is the PostgreSQL service name, not localhost.
+
+Example:
+
+```
+DATABASE_URL=postgresql://postgres:123456@db:5432/notesdb
+```
+
+Where:
+
+* postgres = database username
+* 123456 = database password
+* db = PostgreSQL service name in docker-compose.yml
+* 5432 = PostgreSQL port
+* notesdb = database name
+
+---
+
+# Database Migration
+
+Run migrations inside API container:
+
+Enter container:
+
+```bash
+sudo docker exec -it day4project_api_1 bash
+```
+
+Apply migrations:
 
 ```bash
 alembic upgrade head
@@ -123,13 +173,13 @@ alembic history
 
 # Run Application
 
-Start FastAPI server:
+Using Docker:
 
-```bash
-uvicorn app.main:app --reload
+```
+http://127.0.0.1:8000/docs
 ```
 
-API documentation:
+Swagger documentation:
 
 ```
 http://127.0.0.1:8000/docs
@@ -137,21 +187,17 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# Test Users
-
-For testing authentication:
-
-| Username | Password | Role  |
-| -------- | -------- | ----- |
-| Hiba     | 123456    | user  |
-| Ali      | 654321   | user  |
-| admin    | admin    | admin |
-
----
-
 # API Endpoints
 
 ## Authentication
+
+### Register User
+
+```
+POST /api/v1/auth/register
+```
+
+Creates a new user account.
 
 ### Login
 
@@ -167,6 +213,12 @@ Returns JWT access token.
 
 All note endpoints require JWT authentication.
 
+Token format:
+
+```
+Authorization: Bearer <token>
+```
+
 ## Create Note
 
 ```
@@ -175,13 +227,11 @@ POST /api/v1/notes
 
 Creates a note for the logged-in user.
 
-Success:
+Response:
 
 ```
 201 Created
 ```
-
----
 
 ## Get My Notes
 
@@ -189,9 +239,7 @@ Success:
 GET /api/v1/notes
 ```
 
-Returns only the current user's notes.
-
----
+Returns only notes owned by the current user.
 
 ## Get Single Note
 
@@ -199,15 +247,13 @@ Returns only the current user's notes.
 GET /api/v1/notes/{id}
 ```
 
-A user can only access their own notes.
+Users can only access their own notes.
 
-Another user's note returns:
+Other users' notes return:
 
 ```
 404 Not Found
 ```
-
----
 
 ## Update Note
 
@@ -215,17 +261,11 @@ Another user's note returns:
 PUT /api/v1/notes/{id}
 ```
 
-Updates only owned notes.
-
----
-
 ## Delete Note
 
 ```
 DELETE /api/v1/notes/{id}
 ```
-
-Deletes only owned notes.
 
 Success:
 
@@ -269,7 +309,7 @@ Fields:
 
 * id
 * username
-* hashed password
+* hashed_password
 * role
 
 ## Note
@@ -302,16 +342,18 @@ Category 1 ---- * Note
 
 # Authentication Flow
 
-1. User logs in with username and password.
-2. Server verifies password.
-3. JWT token is generated.
-4. Token is sent in Authorization header:
+1. User registers an account.
+2. Password is hashed using bcrypt.
+3. User logs in with username and password.
+4. Server verifies credentials.
+5. JWT token is generated.
+6. Token is sent in request headers:
 
 ```
 Authorization: Bearer <token>
 ```
 
-5. Protected routes verify the token before allowing access.
+7. Protected routes verify JWT before allowing access.
 
 ---
 
@@ -333,7 +375,8 @@ Changes were committed incrementally:
 * JWT authentication
 * Ownership authorization
 * Admin authorization
-* PostgreSQL migration
+* PostgreSQL integration
+* Docker deployment setup
 
 ---
 
@@ -346,4 +389,7 @@ Changes were committed incrementally:
 * Alembic
 * Pydantic
 * JWT Authentication
+* Passlib / bcrypt
+* Docker
+* Docker Compose
 * Uvicorn
